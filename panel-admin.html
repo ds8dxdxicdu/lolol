@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Panel de Admin</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to bottom, #e0eafc, #cfdef3);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+    }
+
+    h2 {
+      color: #2c3e50;
+    }
+
+    #login, #panel {
+      display: none;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    #login {
+      display: block;
+    }
+
+    #pantalla {
+      background: white;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      font-size: 24px;
+      text-align: right;
+    }
+
+    .teclado {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+
+    .btn-tecla {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 20px;
+      font-size: 22px;
+      border-radius: 12px;
+      box-shadow: 0 4px #2980b9;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .btn-tecla:active {
+      transform: translateY(4px);
+      box-shadow: none;
+    }
+
+    .solicitud {
+      background: white;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      margin: 10px 0;
+    }
+
+    .boton {
+      margin: 5px;
+      padding: 10px 15px;
+      font-size: 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
+      box-shadow: 0 4px rgba(0,0,0,0.2);
+    }
+
+    .aceptar {
+      background-color: #28a745;
+    }
+
+    .rechazar {
+      background-color: #dc3545;
+    }
+  </style>
+</head>
+<body>
+  <h2>🔐 Acceso Admin</h2>
+
+  <div id="login">
+    <div id="pantalla">••••</div>
+    <div class="teclado" id="tecladoNumerico"></div>
+    <p id="error" style="color: red;"></p>
+  </div>
+
+  <div id="panel">
+    <h2>📋 Solicitudes</h2>
+    <div id="lista"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDEfz06c2rjYZGQW1tKDl1dLzXPubjwKDM",
+      authDomain: "mi-app-cb6a8.firebaseapp.com",
+      projectId: "mi-app-cb6a8",
+      storageBucket: "mi-app-cb6a8.firebasestorage.app",
+      messagingSenderId: "283018898289",
+      appId: "1:283018898289:web:a41bb9212ef069179724d0",
+      measurementId: "G-S94X4WQSSP"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+  </script>
+
+  <script>
+    const teclado = document.getElementById("tecladoNumerico");
+    const pantalla = document.getElementById("pantalla");
+    let input = "";
+
+    const botones = ["1","2","3","4","5","6","7","8","9","0","←","OK"];
+    botones.forEach(b => {
+      const btn = document.createElement("button");
+      btn.className = "btn-tecla";
+      btn.textContent = b;
+      btn.onclick = () => teclaPulsada(b);
+      teclado.appendChild(btn);
+    });
+
+    function teclaPulsada(valor) {
+      if (valor === "←") {
+        input = input.slice(0, -1);
+      } else if (valor === "OK") {
+        verificar();
+        return;
+      } else {
+        input += valor;
+      }
+      pantalla.textContent = "•".repeat(input.length) || "••••";
+    }
+
+    function verificar() {
+      if (input === "2011") {
+        document.getElementById('login').style.display = "none";
+        document.getElementById('panel').style.display = "block";
+        mostrarSolicitudes();
+      } else {
+        document.getElementById("error").textContent = "Contraseña incorrecta";
+        input = "";
+        pantalla.textContent = "••••";
+      }
+    }
+
+    let solicitudes = JSON.parse(localStorage.getItem("solicitudes")) || [];
+
+    function mostrarSolicitudes() {
+      const lista = document.getElementById("lista");
+      lista.innerHTML = "";
+      solicitudes.forEach((s, index) => {
+        lista.innerHTML += `
+          <div class="solicitud">
+            <p><strong>${s.nombre} ${s.apellido1} ${s.apellido2}</strong></p>
+            <p>Estado: ${s.estado}</p>
+            ${s.estado === "pendiente" ? `
+              <button class="boton aceptar" onclick="cambiarEstado(${index}, 'aceptada')">Aceptar</button>
+              <button class="boton rechazar" onclick="cambiarEstado(${index}, 'rechazada')">Rechazar</button>
+            ` : ""}
+          </div>
+        `;
+      });
+    }
+
+    function cambiarEstado(index, nuevoEstado) {
+      solicitudes[index].estado = nuevoEstado;
+      localStorage.setItem("solicitudes", JSON.stringify(solicitudes));
+      mostrarSolicitudes();
+    }
+  </script>
+</body>
+</html>
